@@ -65,7 +65,7 @@ Outside Context Protocol generates realistic legal training exercises from real 
 
 On first launch you'll see a role picker — choose **Supervisor** to create exercises or **Trainee** to work through them.
 
-A seed exercise ("Website T&Cs Redraft") is included so trainees have something to try immediately.
+A selection of prebuilt exercises are included so trainees have something to try immediately.
 
 To create your own exercise as a supervisor:
 1. Click **+ New Exercise**
@@ -108,4 +108,4 @@ src/
 
 - Storage is filesystem-based (`data/` folder) — works locally and on platforms with persistent disk. For serverless deployment you'd need to swap to a database.
 - The `data/` directory is gitignored. Exercise and session data is created at runtime.
-- The seed exercise is generated on first run if no exercises exist.
+- Prebuilt seed exercises are generated on first run if no exercises exist.
