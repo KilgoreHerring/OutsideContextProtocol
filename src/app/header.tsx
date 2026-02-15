@@ -21,12 +21,16 @@ export function AppHeader() {
         justifyContent: 'space-between',
       }}>
         <Link href="/" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.625rem',
           fontFamily: 'var(--font-serif)',
           fontSize: '1rem',
           fontWeight: 700,
           color: 'var(--ink)',
           textDecoration: 'none',
         }}>
+          <img src="/logo-transparent.png" alt="" style={{ height: '28px' }} />
           Outside Context Protocol
         </Link>
         <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'baseline' }}>
