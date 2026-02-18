@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { getExercise, saveExercise } from '@/lib/storage/exercises'
-import { saveUploadedFile } from '@/lib/storage/documents'
 import { extractText, getMimeType } from '@/lib/documents/parser'
 import type { UploadedDocument, DocumentRole } from '@/types/document'
 
@@ -36,8 +35,6 @@ export async function POST(
       { status: 400 }
     )
   }
-
-  await saveUploadedFile(exerciseId, docId, buffer, file.name)
 
   const doc: UploadedDocument = {
     id: docId,

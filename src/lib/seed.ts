@@ -1,5 +1,4 @@
-import { promises as fs } from 'fs'
-import path from 'path'
+import { getExercise, saveExercise } from './storage/exercises'
 import type { Exercise } from '@/types/exercise'
 
 const GREENLEAF_ID = 'greenleaf-tcs-redraft'
@@ -40,22 +39,10 @@ const LBA_DOC_IDS = {
 }
 
 async function seedExercise(id: string, buildExercise: () => Exercise): Promise<void> {
-  const dir = path.join(process.cwd(), 'data', 'exercises', id)
-  const exercisePath = path.join(dir, 'exercise.json')
-
-  try {
-    await fs.access(exercisePath)
-    return
-  } catch {
-    // does not exist, proceed
-  }
-
-  await fs.mkdir(dir, { recursive: true })
+  const existing = await getExercise(id)
+  if (existing) return
   const exercise = buildExercise()
-  await fs.writeFile(exercisePath, JSON.stringify(exercise, null, 2))
-  if (exercise.generatedMarkdown) {
-    await fs.writeFile(path.join(dir, 'exercise.md'), exercise.generatedMarkdown)
-  }
+  await saveExercise(exercise)
 }
 
 export async function seedDefaultExercise(): Promise<void> {
