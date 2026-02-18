@@ -67,7 +67,7 @@ function buildGreenleafExercise(): Exercise {
     documents: [
       {
         id: GL_DOC_IDS.clientEmail,
-        exerciseId: EXERCISE_ID,
+        exerciseId: GREENLEAF_ID,
         filename: 'client_instruction_email.md',
         mimeType: 'text/markdown',
         role: 'instruction',
@@ -77,7 +77,7 @@ function buildGreenleafExercise(): Exercise {
       },
       {
         id: GL_DOC_IDS.v1Terms,
-        exerciseId: EXERCISE_ID,
+        exerciseId: GREENLEAF_ID,
         filename: 'v1_terms_and_conditions.md',
         mimeType: 'text/markdown',
         role: 'source-material',
@@ -87,7 +87,7 @@ function buildGreenleafExercise(): Exercise {
       },
       {
         id: GL_DOC_IDS.v2Terms,
-        exerciseId: EXERCISE_ID,
+        exerciseId: GREENLEAF_ID,
         filename: 'v2_terms_and_conditions_ideal.md',
         mimeType: 'text/markdown',
         role: 'ideal-output',
@@ -97,7 +97,7 @@ function buildGreenleafExercise(): Exercise {
       },
       {
         id: GL_DOC_IDS.idealEmail,
-        exerciseId: EXERCISE_ID,
+        exerciseId: GREENLEAF_ID,
         filename: 'ideal_response_email_to_client.md',
         mimeType: 'text/markdown',
         role: 'ideal-output',
@@ -242,7 +242,7 @@ Remember: the client specifically asked for "a short email setting out what you 
       },
     ],
     rubric: {
-      exerciseId: EXERCISE_ID,
+      exerciseId: GREENLEAF_ID,
       overallApproach: 'The trainee should systematically review the existing terms against current legislation, identify all compliance gaps and issues (including those not explicitly flagged by the client), produce a comprehensive and legally compliant updated set of terms, and then clearly communicate the changes and reasoning to the client in a professional covering email. The approach should demonstrate both legal knowledge and practical commercial awareness.',
       keyIssues: [
         'Cancellation period must be updated from 7 days to 14 days (Consumer Contracts Regulations 2013)',
