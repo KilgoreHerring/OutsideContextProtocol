@@ -42,7 +42,7 @@ async function seedExercise(id: string, buildExercise: () => Exercise): Promise<
   const existing = await getExercise(id)
   if (existing) return
   const exercise = buildExercise()
-  await saveExercise(exercise)
+  await saveExercise(exercise, null)
 }
 
 export async function seedDefaultExercise(): Promise<void> {

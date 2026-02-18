@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRole } from '@/lib/role-context'
 
 export function AppHeader() {
   const { role, setRole } = useRole()
+  const { data: session } = useSession()
   const [showSwitcher, setShowSwitcher] = useState(false)
 
   if (!role) return null
@@ -17,7 +19,7 @@ export function AppHeader() {
     }}>
       <div className="container" style={{
         display: 'flex',
-        alignItems: 'baseline',
+        alignItems: 'center',
         justifyContent: 'space-between',
       }}>
         <Link href="/" style={{
@@ -33,7 +35,7 @@ export function AppHeader() {
           <img src="/logo-transparent.png" alt="" style={{ height: '28px' }} />
           Outside Context Protocol
         </Link>
-        <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'baseline' }}>
+        <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           <Link href="/exercises" style={{ fontSize: '0.8125rem', color: 'var(--ink-secondary)' }}>Exercises</Link>
           <Link href="/" style={{ fontSize: '0.8125rem', color: 'var(--ink-secondary)' }}>Dashboard</Link>
           <div style={{ position: 'relative' }}>
@@ -85,6 +87,27 @@ export function AppHeader() {
               </>
             )}
           </div>
+          {session?.user && (
+            <>
+              <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
+                {session.user.name || session.user.email}
+              </span>
+              <button
+                onClick={() => signOut()}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  color: 'var(--ink-muted)',
+                  textDecoration: 'underline',
+                  padding: 0,
+                }}
+              >
+                Sign out
+              </button>
+            </>
+          )}
         </nav>
       </div>
     </header>

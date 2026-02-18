@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useRole } from '@/lib/role-context'
@@ -11,6 +12,7 @@ export default function ExerciseDetail() {
   const params = useParams()
   const router = useRouter()
   const { role } = useRole()
+  const { data: authSession } = useSession()
   const [exercise, setExercise] = useState<Exercise | null>(null)
   const [loading, setLoading] = useState(true)
   const [startingSession, setStartingSession] = useState(false)
@@ -18,6 +20,12 @@ export default function ExerciseDetail() {
   const [showStartModal, setShowStartModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'steps' | 'rubric'>('overview')
   const isSupervisor = role === 'supervisor'
+
+  useEffect(() => {
+    if (authSession?.user?.name && !traineeName) {
+      setTraineeName(authSession.user.name)
+    }
+  }, [authSession, traineeName])
 
   useEffect(() => {
     const roleParam = role === 'trainee' ? '?role=trainee' : ''

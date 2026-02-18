@@ -2,15 +2,24 @@ import { NextResponse } from 'next/server'
 import { listSessions, saveSession } from '@/lib/storage/sessions'
 import { getExercise } from '@/lib/storage/exercises'
 import { seedDefaultExercise } from '@/lib/seed'
+import { requireAuth } from '@/lib/auth-helpers'
 import type { Session } from '@/types/session'
 
 export async function GET() {
+  const result = await requireAuth()
+  if (result instanceof NextResponse) return result
+  const userId = result
+
   await seedDefaultExercise()
-  const sessions = await listSessions()
+  const sessions = await listSessions(userId)
   return NextResponse.json(sessions)
 }
 
 export async function POST(request: Request) {
+  const result = await requireAuth()
+  if (result instanceof NextResponse) return result
+  const userId = result
+
   const body = await request.json()
   const { exerciseId, traineeName } = body
 
@@ -48,6 +57,6 @@ export async function POST(request: Request) {
     completedAt: null,
   }
 
-  await saveSession(session)
+  await saveSession(session, userId)
   return NextResponse.json(session, { status: 201 })
 }

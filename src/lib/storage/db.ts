@@ -13,9 +13,19 @@ export async function ensureTables() {
   const sql = getSQL()
   try {
     await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        name TEXT NOT NULL DEFAULT '',
+        image TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `
+    await sql`
       CREATE TABLE IF NOT EXISTS exercises (
         id TEXT PRIMARY KEY,
         data JSONB NOT NULL,
+        user_id TEXT,
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `
@@ -24,9 +34,13 @@ export async function ensureTables() {
         id TEXT PRIMARY KEY,
         exercise_id TEXT NOT NULL,
         data JSONB NOT NULL,
+        user_id TEXT,
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `
+    // Add user_id column if tables already exist from before auth migration
+    await sql`ALTER TABLE exercises ADD COLUMN IF NOT EXISTS user_id TEXT`
+    await sql`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id TEXT`
   } catch (err: unknown) {
     const code = err instanceof Error && 'code' in err ? (err as { code: string }).code : ''
     if (code !== '23505' && code !== '42P07') throw err

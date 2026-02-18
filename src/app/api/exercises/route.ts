@@ -1,15 +1,24 @@
 import { NextResponse } from 'next/server'
 import { listExercises, saveExercise } from '@/lib/storage/exercises'
 import { seedDefaultExercise } from '@/lib/seed'
+import { requireAuth } from '@/lib/auth-helpers'
 import type { Exercise } from '@/types/exercise'
 
 export async function GET() {
+  const result = await requireAuth()
+  if (result instanceof NextResponse) return result
+  const userId = result
+
   await seedDefaultExercise()
-  const exercises = await listExercises()
+  const exercises = await listExercises(userId)
   return NextResponse.json(exercises)
 }
 
 export async function POST(request: Request) {
+  const result = await requireAuth()
+  if (result instanceof NextResponse) return result
+  const userId = result
+
   const body = await request.json()
   const { title, description, matterType, difficulty, estimatedDurationMinutes } =
     body
@@ -40,6 +49,6 @@ export async function POST(request: Request) {
     updatedAt: now,
   }
 
-  await saveExercise(exercise)
+  await saveExercise(exercise, userId)
   return NextResponse.json(exercise, { status: 201 })
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { RoleProvider } from '@/lib/role-context'
+import { Providers } from './providers'
 import { AppHeader } from './header'
 import './globals.css'
 
@@ -16,12 +16,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <RoleProvider>
+        <Providers>
           <AppHeader />
           <main style={{ padding: '2rem 0' }}>
             {children}
           </main>
-        </RoleProvider>
+        </Providers>
       </body>
     </html>
   )

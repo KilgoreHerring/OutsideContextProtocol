@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server'
-import { getSession, saveSession } from '@/lib/storage/sessions'
+import { getSession, getSessionOwnerId, saveSession } from '@/lib/storage/sessions'
 import { getExercise } from '@/lib/storage/exercises'
 import { gradeSubmission } from '@/lib/ai/grader'
+import { requireAuth } from '@/lib/auth-helpers'
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ) {
+  const authResult = await requireAuth()
+  if (authResult instanceof NextResponse) return authResult
+  const userId = authResult
+
   const { sessionId } = await params
   const session = await getSession(sessionId)
   if (!session) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+  }
+
+  const ownerId = await getSessionOwnerId(sessionId)
+  if (ownerId !== null && ownerId !== userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const exercise = await getExercise(session.exerciseId)
@@ -90,7 +100,7 @@ export async function POST(
   }
 
   session.lastActivityAt = new Date().toISOString()
-  await saveSession(session)
+  await saveSession(session, userId)
 
   return NextResponse.json({
     stepResult,

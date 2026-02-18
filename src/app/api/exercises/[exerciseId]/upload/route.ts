@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server'
-import { getExercise, saveExercise } from '@/lib/storage/exercises'
+import { getExercise, getExerciseOwnerId, saveExercise } from '@/lib/storage/exercises'
 import { extractText, getMimeType } from '@/lib/documents/parser'
+import { requireAuth } from '@/lib/auth-helpers'
 import type { UploadedDocument, DocumentRole } from '@/types/document'
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ exerciseId: string }> }
 ) {
+  const result = await requireAuth()
+  if (result instanceof NextResponse) return result
+  const userId = result
+
   const { exerciseId } = await params
   const exercise = await getExercise(exerciseId)
   if (!exercise) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  const ownerId = await getExerciseOwnerId(exerciseId)
+  if (ownerId !== null && ownerId !== userId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const formData = await request.formData()
@@ -49,7 +59,7 @@ export async function POST(
 
   exercise.documents.push(doc)
   exercise.updatedAt = new Date().toISOString()
-  await saveExercise(exercise)
+  await saveExercise(exercise, ownerId)
 
   return NextResponse.json(doc, { status: 201 })
 }
