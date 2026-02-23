@@ -3,6 +3,7 @@ import { getSession, getSessionOwnerId, saveSession } from '@/lib/storage/sessio
 import { getExercise } from '@/lib/storage/exercises'
 import { gradeSubmission } from '@/lib/ai/grader'
 import { requireAuth } from '@/lib/auth-helpers'
+import { checkUsageLimit, recordUsage } from '@/lib/ai/usage-limiter'
 
 export async function POST(
   request: Request,
@@ -42,6 +43,15 @@ export async function POST(
     return NextResponse.json({ error: 'Step result not found' }, { status: 404 })
   }
 
+  // Check usage limit before AI grading
+  const { allowed, remaining } = checkUsageLimit(userId)
+  if (!allowed && step.type !== 'read') {
+    return NextResponse.json(
+      { error: `Daily AI usage limit reached (25 calls/day). Try again tomorrow. Remaining: ${remaining}` },
+      { status: 429 }
+    )
+  }
+
   // For read-only steps, just mark as complete
   if (step.type === 'read') {
     stepResult.submission = submission || '[Acknowledged]'
@@ -71,6 +81,8 @@ export async function POST(
 
     try {
       const gradeResult = await gradeSubmission(step, exercise.rubric, submission)
+
+      recordUsage(userId)
 
       stepResult.submission = submission
       stepResult.grade = {

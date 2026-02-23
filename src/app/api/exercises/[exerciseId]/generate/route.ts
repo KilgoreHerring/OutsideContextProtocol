@@ -7,6 +7,7 @@ import {
 } from '@/lib/storage/exercises'
 import { generateExercise } from '@/lib/ai/exercise-generator'
 import { requireAuth } from '@/lib/auth-helpers'
+import { checkUsageLimit, recordUsage } from '@/lib/ai/usage-limiter'
 
 export async function POST(
   _request: Request,
@@ -27,6 +28,15 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  // Check usage limit before generation
+  const { allowed, remaining } = checkUsageLimit(userId)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: `Daily AI usage limit reached (25 calls/day). Try again tomorrow. Remaining: ${remaining}` },
+      { status: 429 }
+    )
+  }
+
   if (exercise.documents.length === 0) {
     return NextResponse.json(
       { error: 'Upload at least one document before generating' },
@@ -45,6 +55,8 @@ export async function POST(
       exercise.estimatedDurationMinutes,
       exercise.documents
     )
+
+    recordUsage(userId)
 
     exercise.steps = result.steps
     exercise.rubric = { ...result.rubric, exerciseId }

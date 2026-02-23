@@ -18,6 +18,18 @@ export default function RootLayout({
       <body>
         <Providers>
           <AppHeader />
+          <div style={{
+            background: 'var(--canvas)',
+            borderBottom: '1px solid var(--rule)',
+            padding: '0.5rem 0',
+            textAlign: 'center',
+            fontSize: '0.75rem',
+            fontFamily: 'var(--font-sans)',
+            color: 'var(--ink-muted)',
+            letterSpacing: '0.01em',
+          }}>
+            Beta — currently using Haiku 4.5. Best results with Sonnet models.
+          </div>
           <main style={{ padding: '2rem 0' }}>
             {children}
           </main>
