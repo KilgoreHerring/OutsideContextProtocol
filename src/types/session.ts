@@ -37,6 +37,11 @@ export interface FinalScore {
   overallFeedback: string
 }
 
+export interface TraineeReflection {
+  content: string
+  submittedAt: string
+}
+
 export interface Session {
   id: string
   exerciseId: string
@@ -47,6 +52,7 @@ export interface Session {
   chatHistory: ChatMessage[]
   questionScores: QuestionScore[]
   finalScore: FinalScore | null
+  reflection: TraineeReflection | null
   startedAt: string
   lastActivityAt: string
   completedAt: string | null
