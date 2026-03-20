@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useRole } from '@/lib/role-context'
 import type { Exercise, ExerciseStep } from '@/types/exercise'
-import type { Session, StepGrade, ChatMessage, QuestionScore } from '@/types/session'
+import type { Session, StepGrade, ChatMessage, QuestionScore, TraineeReflection } from '@/types/session'
 
 export default function SimulationWorkspace() {
   const params = useParams()
@@ -736,6 +736,27 @@ function GradeDisplay({ grade, stepTitle, stepIndex, isLastStep, allStepsComplet
 function FinalReport({ session, exercise }: { session: Session; exercise: Exercise }) {
   const router = useRouter()
   const score = session.finalScore!
+  const [reflectionText, setReflectionText] = useState(session.reflection?.content || '')
+  const [reflectionSaved, setReflectionSaved] = useState(!!session.reflection)
+  const [reflectionSaving, setReflectionSaving] = useState(false)
+
+  async function handleSaveReflection() {
+    if (!reflectionText.trim()) return
+    setReflectionSaving(true)
+    try {
+      const res = await fetch(`/api/sessions/${session.id}/reflect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: reflectionText }),
+      })
+      if (res.ok) {
+        setReflectionSaved(true)
+      }
+    } catch {
+      alert('Failed to save reflection. Please try again.')
+    }
+    setReflectionSaving(false)
+  }
 
   return (
     <div className="container" style={{ maxWidth: 'var(--content-width)', paddingTop: '3rem', paddingBottom: '4rem' }}>
@@ -893,6 +914,73 @@ function FinalReport({ session, exercise }: { session: Session; exercise: Exerci
         }}>
           {score.overallFeedback}
         </div>
+      </div>
+
+      {/* Trainee Reflection */}
+      <div style={{ marginBottom: '3rem', borderTop: '1px solid var(--rule)', paddingTop: '2rem' }}>
+        <div className="label" style={{ marginBottom: '0.375rem' }}>Trainee Reflection</div>
+        <p style={{
+          fontFamily: 'var(--font-serif)',
+          fontSize: '0.875rem',
+          color: 'var(--ink-secondary)',
+          marginBottom: '1rem',
+          lineHeight: 1.6,
+        }}>
+          Reflect on this exercise. What did you learn? What would you do differently?
+          How does this relate to your broader development as a solicitor? The SRA expects
+          regular reflection on your training and practice.
+        </p>
+        {reflectionSaved && !reflectionSaving ? (
+          <div>
+            <div style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '0.9375rem',
+              lineHeight: 1.8,
+              color: 'var(--ink)',
+              whiteSpace: 'pre-wrap',
+              padding: '1rem 0 1rem 1.25rem',
+              borderLeft: '2px solid var(--green)',
+              marginBottom: '0.75rem',
+            }}>
+              {reflectionText}
+            </div>
+            <button
+              className="btn"
+              onClick={() => setReflectionSaved(false)}
+              style={{ fontSize: '0.8125rem' }}
+            >
+              Edit Reflection
+            </button>
+          </div>
+        ) : (
+          <div>
+            <textarea
+              className="form-input"
+              value={reflectionText}
+              onChange={(e) => setReflectionText(e.target.value)}
+              placeholder="What have you learned from this exercise? What skills did you develop? What would you approach differently next time?"
+              style={{ minHeight: '200px', width: '100%', marginBottom: '0.75rem' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.6875rem',
+                color: 'var(--ink-muted)',
+              }}>
+                {reflectionText.length > 0
+                  ? `${reflectionText.split(/\s+/).filter(Boolean).length} words`
+                  : 'Your reflection will be saved with your report'}
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={handleSaveReflection}
+                disabled={reflectionSaving || !reflectionText.trim()}
+              >
+                {reflectionSaving ? <><span className="spinner" /> Saving...</> : 'Save Reflection'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ borderTop: '1px solid var(--rule)', paddingTop: '1.5rem' }}>

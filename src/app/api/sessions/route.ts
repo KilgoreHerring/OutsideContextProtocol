@@ -52,6 +52,7 @@ export async function POST(request: Request) {
     chatHistory: [],
     questionScores: [],
     finalScore: null,
+    reflection: null,
     startedAt: now,
     lastActivityAt: now,
     completedAt: null,

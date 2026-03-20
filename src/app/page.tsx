@@ -178,6 +178,9 @@ export default function Dashboard() {
                   </div>
                   <div className="label" style={{ marginTop: '0.25rem' }}>
                     {session.traineeName}
+                    {session.reflection && (
+                      <span style={{ marginLeft: '0.5rem', color: 'var(--green)' }}>Reflection added</span>
+                    )}
                   </div>
                 </Link>
               )
