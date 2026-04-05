@@ -10,7 +10,20 @@ function parseAIJson(text: string): unknown {
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '')
   }
-  return JSON.parse(cleaned)
+  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    if (match) cleaned = match[0]
+  }
+  try {
+    return JSON.parse(cleaned)
+  } catch (e) {
+    const fixedTrailingCommas = cleaned.replace(/,\s*([}\]])/g, '$1')
+    try {
+      return JSON.parse(fixedTrailingCommas)
+    } catch {
+      throw new Error(`Failed to parse AI response as JSON: ${cleaned.slice(0, 200)}...`)
+    }
+  }
 }
 
 export async function assessQuestion(

@@ -64,28 +64,55 @@ export async function POST(
   }
   session.chatHistory.push(traineeMsg)
 
-  // Fire both AI calls in parallel
+  // Fire both AI calls in parallel, but don't let assessment failure kill the chat
   const previousQuestions = session.chatHistory
     .filter((m) => m.role === 'trainee')
     .map((m) => m.content)
 
-  const [responseText, assessment] = await Promise.all([
-    getChatResponse(
-      exercise.rubric,
-      currentStep,
-      session.chatHistory,
-      message
-    ),
-    assessQuestion(
-      message,
-      `${exercise.title} - ${exercise.matterType}: ${exercise.description}`,
-      `${currentStep.title}: ${currentStep.instruction}`,
-      exercise.rubric.questionRelevanceGuidance,
-      previousQuestions.slice(0, -1) // exclude the current question
-    ),
-  ])
+  let responseText: string
+  let assessment: { rating: 'useful' | 'not-useful'; reasoning: string } | null = null
 
-  recordUsage(userId, 2) // chat + question assessment
+  try {
+    const [chatResult, assessResult] = await Promise.allSettled([
+      getChatResponse(
+        exercise.rubric,
+        currentStep,
+        session.chatHistory,
+        message
+      ),
+      assessQuestion(
+        message,
+        `${exercise.title} - ${exercise.matterType}: ${exercise.description}`,
+        `${currentStep.title}: ${currentStep.instruction}`,
+        exercise.rubric.questionRelevanceGuidance,
+        previousQuestions.slice(0, -1) // exclude the current question
+      ),
+    ])
+
+    if (chatResult.status === 'rejected') {
+      console.error('Chat response failed:', chatResult.reason)
+      return NextResponse.json(
+        { error: 'Failed to generate supervisor response' },
+        { status: 500 }
+      )
+    }
+
+    responseText = chatResult.value
+
+    if (assessResult.status === 'fulfilled') {
+      assessment = assessResult.value
+      recordUsage(userId, 2) // chat + question assessment
+    } else {
+      console.error('Question assessment failed (non-blocking):', assessResult.reason)
+      recordUsage(userId, 1) // only chat succeeded
+    }
+  } catch (e: any) {
+    console.error('Chat failed:', e)
+    return NextResponse.json(
+      { error: `Chat failed: ${e.message || 'Unknown error'}` },
+      { status: 500 }
+    )
+  }
 
   // Add supervisor response
   const supervisorMsg: ChatMessage = {
@@ -97,13 +124,16 @@ export async function POST(
   }
   session.chatHistory.push(supervisorMsg)
 
-  // Record question score
-  const questionScore: QuestionScore = {
-    messageId: traineeMsg.id,
-    rating: assessment.rating,
-    reasoning: assessment.reasoning,
+  // Record question score (only if assessment succeeded)
+  let questionScore: QuestionScore | null = null
+  if (assessment) {
+    questionScore = {
+      messageId: traineeMsg.id,
+      rating: assessment.rating,
+      reasoning: assessment.reasoning,
+    }
+    session.questionScores.push(questionScore)
   }
-  session.questionScores.push(questionScore)
 
   session.lastActivityAt = new Date().toISOString()
   await saveSession(session, userId)

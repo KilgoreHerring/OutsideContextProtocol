@@ -10,11 +10,21 @@ function parseAIJson(text: string): unknown {
     cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '')
   }
   // If response starts with non-JSON, try to extract the JSON object
-  if (!cleaned.startsWith('{')) {
+  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
     const match = cleaned.match(/\{[\s\S]*\}/)
     if (match) cleaned = match[0]
   }
-  return JSON.parse(cleaned)
+  try {
+    return JSON.parse(cleaned)
+  } catch (e) {
+    // Try fixing common issues: trailing commas, unescaped newlines in strings
+    const fixedTrailingCommas = cleaned.replace(/,\s*([}\]])/g, '$1')
+    try {
+      return JSON.parse(fixedTrailingCommas)
+    } catch {
+      throw new Error(`Failed to parse AI response as JSON: ${cleaned.slice(0, 200)}...`)
+    }
+  }
 }
 
 export async function gradeSubmission(

@@ -183,17 +183,29 @@ export default function SimulationWorkspace() {
     const message = chatInput
     setChatInput('')
 
-    const res = await fetch(`/api/sessions/${session!.id}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, stepId: activeStep.id }),
-    })
+    try {
+      const res = await fetch(`/api/sessions/${session!.id}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, stepId: activeStep.id }),
+      })
 
-    const data = await res.json()
-    setChatSending(false)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Chat failed' }))
+        alert(err.error || 'Chat failed')
+        setSession((prev) => prev ? { ...prev, chatHistory: prev.chatHistory.filter(m => m.id !== 'temp') } : prev)
+        setChatSending(false)
+        return
+      }
 
-    const sessionRes = await fetch(`/api/sessions/${params.sessionId}`)
-    setSession(await sessionRes.json())
+      setChatSending(false)
+      const sessionRes = await fetch(`/api/sessions/${params.sessionId}`)
+      setSession(await sessionRes.json())
+    } catch (e) {
+      setSession((prev) => prev ? { ...prev, chatHistory: prev.chatHistory.filter(m => m.id !== 'temp') } : prev)
+      setChatSending(false)
+      alert('Something went wrong. Please try again.')
+    }
   }
 
   async function handleComplete() {
