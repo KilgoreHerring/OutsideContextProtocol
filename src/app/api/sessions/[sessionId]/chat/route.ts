@@ -90,9 +90,11 @@ export async function POST(
     ])
 
     if (chatResult.status === 'rejected') {
-      console.error('Chat response failed:', chatResult.reason)
+      const reason = chatResult.reason
+      console.error('Chat response failed:', reason)
+      const detail = reason?.message || reason?.toString() || 'Unknown error'
       return NextResponse.json(
-        { error: 'Failed to generate supervisor response' },
+        { error: `Supervisor response failed: ${detail}` },
         { status: 500 }
       )
     }
