@@ -44,7 +44,7 @@ export async function calculateFinalScore(
   // Get AI-generated narrative assessment
   const client = getClient()
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929',
+    model: 'claude-sonnet-4-5',
     max_tokens: 2048,
     system: finalReportSystem,
     messages: [
