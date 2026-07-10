@@ -38,6 +38,14 @@ export async function ensureTables() {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `
+    await sql`
+      CREATE TABLE IF NOT EXISTS usage (
+        user_id TEXT NOT NULL,
+        day DATE NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, day)
+      )
+    `
     // Add user_id column if tables already exist from before auth migration
     await sql`ALTER TABLE exercises ADD COLUMN IF NOT EXISTS user_id TEXT`
     await sql`ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id TEXT`

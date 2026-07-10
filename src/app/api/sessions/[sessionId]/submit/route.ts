@@ -3,7 +3,7 @@ import { getSession, getSessionOwnerId, saveSession } from '@/lib/storage/sessio
 import { getExercise } from '@/lib/storage/exercises'
 import { gradeSubmission } from '@/lib/ai/grader'
 import { requireAuth } from '@/lib/auth-helpers'
-import { checkUsageLimit, recordUsage } from '@/lib/ai/usage-limiter'
+import { checkUsageLimit, recordUsage } from '@/lib/storage/usage'
 
 export async function POST(
   request: Request,
@@ -44,7 +44,7 @@ export async function POST(
   }
 
   // Check usage limit before AI grading
-  const { allowed, remaining } = checkUsageLimit(userId)
+  const { allowed, remaining } = await checkUsageLimit(userId)
   if (!allowed && step.type !== 'read') {
     return NextResponse.json(
       { error: `Daily AI usage limit reached (25 calls/day). Try again tomorrow. Remaining: ${remaining}` },
@@ -82,7 +82,7 @@ export async function POST(
     try {
       const gradeResult = await gradeSubmission(step, exercise.rubric, submission)
 
-      recordUsage(userId)
+      await recordUsage(userId)
 
       stepResult.submission = submission
       stepResult.grade = {

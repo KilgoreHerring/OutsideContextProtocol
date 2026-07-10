@@ -4,7 +4,7 @@ import { getExercise } from '@/lib/storage/exercises'
 import { getChatResponse } from '@/lib/ai/chat-responder'
 import { assessQuestion } from '@/lib/ai/question-assessor'
 import { requireAuth } from '@/lib/auth-helpers'
-import { checkUsageLimit, recordUsage } from '@/lib/ai/usage-limiter'
+import { checkUsageLimit, recordUsage } from '@/lib/storage/usage'
 import type { ChatMessage, QuestionScore } from '@/types/session'
 
 export async function POST(
@@ -42,7 +42,7 @@ export async function POST(
   }
 
   // Check usage limit (chat fires 2 AI calls: response + question assessment)
-  const { allowed, remaining } = checkUsageLimit(userId)
+  const { allowed, remaining } = await checkUsageLimit(userId)
   if (!allowed) {
     return NextResponse.json(
       { error: `Daily AI usage limit reached (25 calls/day). Try again tomorrow. Remaining: ${remaining}` },
@@ -103,10 +103,10 @@ export async function POST(
 
     if (assessResult.status === 'fulfilled') {
       assessment = assessResult.value
-      recordUsage(userId, 2) // chat + question assessment
+      await recordUsage(userId, 2) // chat + question assessment
     } else {
       console.error('Question assessment failed (non-blocking):', assessResult.reason)
-      recordUsage(userId, 1) // only chat succeeded
+      await recordUsage(userId, 1) // only chat succeeded
     }
   } catch (e: any) {
     console.error('Chat failed:', e)
